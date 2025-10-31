@@ -6,6 +6,7 @@ interface User {
   email: string
   role: 'admin' | 'citizen'
   name: string
+  complaints?: any[] // Array of complaints for citizens
 }
 
 interface AuthState {

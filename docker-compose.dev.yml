@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Backend API Server (Development)
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile.dev
+    container_name: infrafix-backend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - API_BASE_URL=http://localhost:3000/api
+    volumes:
+      # Mount source code for hot reload
+      - ./server:/app
+      - /app/node_modules
+    command: npm run dev
+    restart: unless-stopped
+
+  # Frontend React Application (Development)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: infrafix-frontend-dev
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:3000/api
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: infrafix-network-dev
+

@@ -5,6 +5,59 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api-proxy': {
+        target: 'http://9.61.3.174:8080',
+        changeOrigin: true,
+        secure: false, // Allow self-signed certificates if needed
+        rewrite: (path) => path.replace(/^\/api-proxy/, ''),
+        configure: (proxy, _options) => {
+          proxy.on('error', (err: any, req: any, res: any) => {
+            console.error('❌ Proxy Error:', err.code, err.message);
+            console.error('  Request:', req.method, req.url);
+            console.error('  Target:', 'http://9.61.3.174:8080');
+            console.error('  Possible causes:');
+            console.error('    - Server is down or not running');
+            console.error('    - Network firewall blocking connection');
+            console.error('    - Server not accessible from this network');
+            console.error('    - Wrong IP/Port');
+            if (res && !res.headersSent) {
+              res.writeHead(500, {
+                'Content-Type': 'application/json'
+              });
+              res.end(JSON.stringify({ 
+                error: 'Proxy Error', 
+                message: err.message,
+                code: err.code,
+                hint: 'Cannot connect to API server. Check server status and network connectivity.'
+              }));
+            }
+          });
+          proxy.on('proxyReq', (proxyReq: any, req: any, _res: any) => {
+            console.log('📤 [Proxy]', req.method, req.url, '→', `http://9.61.3.174:8080${proxyReq.path}`);
+          });
+          proxy.on('proxyRes', (proxyRes: any, req: any, _res: any) => {
+            console.log('📥 [Proxy]', proxyRes.statusCode, req.method, req.url);
+          });
+          proxy.on('timeout', (req: any, res: any) => {
+            console.error('⏱️  Proxy Timeout:', req.url);
+            if (res && !res.headersSent) {
+              res.writeHead(504, {
+                'Content-Type': 'application/json'
+              });
+              res.end(JSON.stringify({ 
+                error: 'Gateway Timeout', 
+                message: 'Server took too long to respond',
+                hint: 'API server might be slow or unreachable'
+              }));
+            }
+          });
+        },
+        timeout: 60000, // 60 seconds
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
