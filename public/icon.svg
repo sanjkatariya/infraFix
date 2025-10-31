@@ -1,0 +1,29 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="120" fill="#030213"/>
+  <rect x="32" y="32" width="448" height="448" rx="88" fill="#ffffff" opacity="0.1"/>
+  
+  <!-- Wrench/Tool Icon -->
+  <g transform="translate(256, 256)">
+    <!-- Wrench Handle -->
+    <path d="M -80 -120 L -80 40 L -40 40 L -40 -120 Z" fill="#ffffff" opacity="0.9"/>
+    <ellipse cx="-60" cy="-100" rx="20" ry="20" fill="#030213"/>
+    
+    <!-- Wrench Head -->
+    <path d="M 40 -80 L 120 -80 L 120 -40 L 40 -40 Z" fill="#ffffff" opacity="0.9"/>
+    <rect x="50" y="-70" width="70" height="20" rx="10" fill="#030213"/>
+    
+    <!-- Tool/Repair Symbol -->
+    <circle cx="80" cy="-60" r="15" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.7"/>
+  </g>
+  
+  <!-- Building/Infrastructure Symbol -->
+  <rect x="180" y="180" width="80" height="180" fill="#ffffff" opacity="0.9"/>
+  <rect x="200" y="220" width="15" height="15" fill="#030213"/>
+  <rect x="225" y="220" width="15" height="15" fill="#030213"/>
+  <rect x="200" y="260" width="15" height="15" fill="#030213"/>
+  <rect x="225" y="260" width="15" height="15" fill="#030213"/>
+  
+  <!-- Fix/Check Mark -->
+  <path d="M 280 320 L 320 360 L 380 280" stroke="#ffffff" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9"/>
+</svg>
+

@@ -8,6 +8,7 @@ import AdminAnalytics from './pages/admin/AdminAnalytics'
 import CitizenComplaint from './pages/citizen/CitizenComplaint'
 import CitizenStatus from './pages/citizen/CitizenStatus'
 import CitizenDashboard from './pages/citizen/CitizenDashboard'
+import InstallPrompt from './components/InstallPrompt'
 
 function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode, requiredRole?: 'admin' | 'citizen' }) {
   const { isAuthenticated, user } = useAuthStore()
@@ -26,6 +27,7 @@ function ProtectedRoute({ children, requiredRole }: { children: React.ReactNode,
 function App() {
   return (
     <BrowserRouter>
+      <InstallPrompt />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         

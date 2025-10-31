@@ -1,135 +1,332 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Link } from 'react-router-dom'
-import { PlusCircle, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
+import { useState } from 'react';
+import AIChatbotComplaint from '@/components/AIChatbotComplaint';
 
 export default function CitizenDashboard() {
-  const userComplaints = [
-    {
-      id: 'C-1001',
-      description: 'Pothole on Main Street',
-      status: 'in-progress',
-      submittedDate: '2024-01-15',
-      priority: 'High',
-    },
-    {
-      id: 'C-1002',
-      description: 'Broken streetlight',
-      status: 'resolved',
-      submittedDate: '2024-01-10',
-      resolvedDate: '2024-01-14',
-    },
-    {
-      id: 'C-1003',
-      description: 'Drainage issue',
-      status: 'pending',
-      submittedDate: '2024-01-20',
-    },
-  ]
-  
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'resolved':
-        return <CheckCircle2 className="w-5 h-5 text-green-500" />
-      case 'in-progress':
-        return <Clock className="w-5 h-5 text-blue-500" />
-      default:
-        return <AlertCircle className="w-5 h-5 text-yellow-500" />
+  const [activeTab, setActiveTab] = useState<'submit' | 'history' | 'chatbot'>('submit');
+  const [complaintForm, setComplaintForm] = useState({
+    category: '',
+    description: '',
+    location: '',
+    phone: '',
+  });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
-  
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'resolved':
-        return 'bg-green-100 text-green-800'
-      case 'in-progress':
-        return 'bg-blue-100 text-blue-800'
-      default:
-        return 'bg-yellow-100 text-yellow-800'
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitted(true);
+    setTimeout(() => {
+      setIsSubmitted(false);
+      setComplaintForm({ category: '', description: '', location: '', phone: '' });
+      setImagePreview(null);
+    }, 3000);
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setComplaintForm(prev => ({
+            ...prev,
+            location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+          }));
+          alert('Location captured successfully!');
+        },
+        () => {
+          alert('Unable to get location. Please enter manually.');
+        }
+      );
     }
+  };
+
+  const complaints = [
+    { id: 'CPL-5433', type: 'Pothole', location: 'Main St & 5th Ave', status: 'In Progress', date: '2025-10-27', progress: 60 },
+    { id: 'CPL-5410', type: 'Streetlight', location: 'Park Road', status: 'Completed', date: '2025-10-25', progress: 100 },
+    { id: 'CPL-5389', type: 'Garbage', location: 'Market Street', status: 'Pending', date: '2025-10-24', progress: 20 },
+  ];
+
+  // Show chatbot view if selected
+  if (activeTab === 'chatbot') {
+    return <AIChatbotComplaint onBack={() => setActiveTab('submit')} />;
   }
   
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
-          <p className="text-gray-600 mt-1">Track your complaints and infrastructure issues</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="flex gap-2 bg-white rounded-lg border p-1">
+            <button
+              onClick={() => setActiveTab('submit')}
+              className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
+                activeTab === 'submit'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span>➕</span>
+              Submit Complaint
+            </button>
+            <button
+              onClick={() => setActiveTab('chatbot')}
+              className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
+                activeTab === 'chatbot'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span>🤖</span>
+              AI Assistant
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
+                activeTab === 'history'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <span>📋</span>
+              My Complaints
+            </button>
+          </div>
         </div>
-        <Link to="/citizen/complaint">
-          <Button>
-            <PlusCircle className="w-4 h-4 mr-2" />
-            File New Complaint
-          </Button>
-        </Link>
-      </div>
-      
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Complaints</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userComplaints.length}</div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Resolved</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {userComplaints.filter(c => c.status === 'resolved').length}
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {userComplaints.filter(c => c.status === 'in-progress').length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      {/* My Complaints */}
-      <Card>
-        <CardHeader>
-          <CardTitle>My Complaints</CardTitle>
-          <CardDescription>Track the status of your submitted complaints</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {userComplaints.map((complaint) => (
-              <div key={complaint.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-4">
-                  {getStatusIcon(complaint.status)}
-                  <div>
-                    <p className="font-medium">{complaint.id}</p>
-                    <p className="text-sm text-gray-500">{complaint.description}</p>
-                    <p className="text-xs text-gray-400 mt-1">Submitted: {complaint.submittedDate}</p>
-                  </div>
+
+        {/* Submit Complaint Tab */}
+        {activeTab === 'submit' && (
+          <div className="bg-white rounded-lg border p-6">
+            {isSubmitted ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">✓</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(complaint.status)}`}>
-                    {complaint.status.charAt(0).toUpperCase() + complaint.status.slice(1).replace('-', ' ')}
-                  </span>
-                  <Link to={`/citizen/status?complaint=${complaint.id}`}>
-                    <Button variant="outline" size="sm">View Details</Button>
-                  </Link>
+                <h3 className="text-xl mb-2">Complaint Submitted!</h3>
+                <p className="text-gray-600 mb-4">
+                  Your complaint has been received and is being processed by our AI agents.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 inline-block">
+                  <div className="text-sm text-gray-600 mb-1">Your Complaint ID</div>
+                  <div className="text-2xl text-blue-600">CPL-5434</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-xl mb-2">Submit Infrastructure Complaint</h2>
+                <p className="text-gray-600 mb-6">
+                  Report potholes, broken streetlights, water leaks, and other infrastructure issues
+                </p>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Category */}
+                  <div>
+                    <label className="block text-sm mb-2">Issue Category *</label>
+                    <select
+                      value={complaintForm.category}
+                      onChange={(e) => setComplaintForm(prev => ({ ...prev, category: e.target.value }))}
+                      required
+                      className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="">Select category</option>
+                      <option value="pothole">🕳️ Pothole</option>
+                      <option value="streetlight">💡 Streetlight Issue</option>
+                      <option value="water-leak">💧 Water Leak</option>
+                      <option value="garbage">🗑️ Garbage/Waste</option>
+                      <option value="drainage">🌊 Drainage Problem</option>
+                      <option value="other">⚙️ Other</option>
+                    </select>
+      </div>
+      
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm mb-2">Description *</label>
+                    <textarea
+                      value={complaintForm.description}
+                      onChange={(e) => setComplaintForm(prev => ({ ...prev, description: e.target.value }))}
+                      required
+                      rows={4}
+                      placeholder="Describe the issue in detail..."
+                      className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                  </div>
+
+                  {/* Photo Upload */}
+                  <div>
+                    <label className="block text-sm mb-2">Upload Photo *</label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors">
+                      {imagePreview ? (
+                        <div className="space-y-3">
+                          <img src={imagePreview} alt="Preview" className="max-h-48 mx-auto rounded-lg" />
+                          <button
+                            type="button"
+                            onClick={() => setImagePreview(null)}
+                            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                          >
+                            Change Photo
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="text-4xl mb-2">📸</div>
+                          <p className="text-sm text-gray-600 mb-2">Upload a photo of the issue</p>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            id="photo-upload"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => document.getElementById('photo-upload')?.click()}
+                            className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                          >
+                            Choose Photo
+                          </button>
+                        </div>
+                      )}
+                    </div>
+            </div>
+
+                  {/* Location */}
+                  <div>
+                    <label className="block text-sm mb-2">Location *</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={complaintForm.location}
+                        onChange={(e) => setComplaintForm(prev => ({ ...prev, location: e.target.value }))}
+                        required
+                        placeholder="Enter address or coordinates"
+                        className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={getCurrentLocation}
+                        className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+                      >
+                        📍
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Click the pin icon to auto-detect your location
+                    </p>
+            </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label className="block text-sm mb-2">Contact Number *</label>
+                    <input
+                      type="tel"
+                      value={complaintForm.phone}
+                      onChange={(e) => setComplaintForm(prev => ({ ...prev, phone: e.target.value }))}
+                      required
+                      placeholder="Your phone number"
+                      className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+      </div>
+      
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Submit Complaint
+                  </button>
+
+                  {/* Info Box */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm mb-2">What happens next?</h4>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      <li>✓ AI analyzes your complaint and classifies severity</li>
+                      <li>✓ Issue is prioritized based on impact and location</li>
+                      <li>✓ Work order is created and assigned to a crew</li>
+                      <li>✓ You'll receive updates via SMS and notifications</li>
+                    </ul>
+                  </div>
+                </form>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* My Complaints Tab */}
+        {activeTab === 'history' && (
+          <div className="space-y-4">
+            {complaints.map((complaint) => (
+              <div key={complaint.id} className="bg-white rounded-lg border p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-lg">{complaint.id}</h3>
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        complaint.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                        complaint.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {complaint.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-600">{complaint.type}</p>
+                  </div>
+                  {complaint.status === 'Completed' && (
+                    <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm">
+                      ⭐ Feedback
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-sm text-gray-600 mb-4">📍 {complaint.location}</p>
+
+                {complaint.progress > 0 && (
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Progress</span>
+                      <span>{complaint.progress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-100 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${
+                          complaint.progress === 100 ? 'bg-green-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${complaint.progress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="text-xs text-gray-500">
+                  Submitted: {complaint.date}
                 </div>
               </div>
             ))}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
 
+            {complaints.length === 0 && (
+              <div className="bg-white rounded-lg border p-12 text-center">
+                <div className="text-4xl mb-4">📋</div>
+                <h3 className="text-lg mb-2">No Complaints Yet</h3>
+                <p className="text-gray-600">
+                  Submit your first complaint to start tracking infrastructure issues
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

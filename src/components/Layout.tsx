@@ -19,8 +19,6 @@ export default function Layout() {
   
   const citizenNav = [
     { path: '/citizen/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/citizen/complaint', label: 'File Complaint', icon: PlusCircle },
-    { path: '/citizen/status', label: 'Track Status', icon: CheckCircle },
   ]
   
   const navItems = isAdmin ? adminNav : citizenNav

@@ -50,30 +50,59 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {
         name: 'InfraFix - Citizen Complaint Management',
         short_name: 'InfraFix',
         description: 'AI-powered citizen complaint management system',
-        theme_color: '#0ea5e9',
+        theme_color: '#030213',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
+        id: '/',
         icons: [
+          {
+            src: 'pwa-64x64.png',
+            sizes: '64x64',
+            type: 'image/png',
+            purpose: 'any'
+          },
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ],
+        categories: ['productivity', 'utilities', 'government'],
+        shortcuts: [
+          {
+            name: 'File Complaint',
+            short_name: 'Complaint',
+            description: 'File a new infrastructure complaint',
+            url: '/citizen/dashboard?tab=submit',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'AI Assistant',
+            short_name: 'AI Assist',
+            description: 'Use AI to file a complaint',
+            url: '/citizen/dashboard?tab=chatbot',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           }
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff,ttf}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\./,
@@ -83,10 +112,28 @@ export default defineConfig({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours
+              },
+              networkTimeoutSeconds: 10
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
           }
-        ]
+        ],
+        skipWaiting: true,
+        clientsClaim: true
+      },
+      devOptions: {
+        enabled: true,
+        type: 'module'
       }
     })
   ],

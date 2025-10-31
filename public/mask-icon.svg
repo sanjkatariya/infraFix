@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" fill="#030213"/>
+  <!-- Simple tool/wrench icon for Safari pinned tab -->
+  <path d="M 150 200 L 150 320 L 200 320 L 200 200 Z M 250 200 L 250 240 L 350 240 L 350 200 Z" 
+        fill="#ffffff" stroke="#ffffff" stroke-width="20"/>
+  <circle cx="175" cy="260" r="30" fill="#ffffff"/>
+</svg>
+
