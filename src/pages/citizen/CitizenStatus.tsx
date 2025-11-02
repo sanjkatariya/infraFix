@@ -28,9 +28,46 @@ export default function CitizenStatus() {
     ],
   }
   
-  const getStatusInfo = (status: string) => {
-    switch (status) {
+  const getStatusInfo = (status: number | string | undefined) => {
+    // Handle numeric status codes: 0 = pending, 1 = inprogress, 2 = resolved
+    if (typeof status === 'number') {
+      switch (status) {
+        case 0:
+          return {
+            icon: <AlertCircle className="w-6 h-6 text-yellow-500" />,
+            color: 'text-yellow-600',
+            bgColor: 'bg-yellow-50',
+            label: 'Pending',
+          }
+        case 1:
+          return {
+            icon: <Clock className="w-6 h-6 text-blue-500" />,
+            color: 'text-blue-600',
+            bgColor: 'bg-blue-50',
+            label: 'In Progress',
+          }
+        case 2:
+          return {
+            icon: <CheckCircle2 className="w-6 h-6 text-green-500" />,
+            color: 'text-green-600',
+            bgColor: 'bg-green-50',
+            label: 'Resolved',
+          }
+        default:
+          return {
+            icon: <AlertCircle className="w-6 h-6 text-yellow-500" />,
+            color: 'text-yellow-600',
+            bgColor: 'bg-yellow-50',
+            label: 'Pending',
+          }
+      }
+    }
+    
+    // Handle string statuses (backward compatibility)
+    const statusStr = String(status || 'pending').toLowerCase();
+    switch (statusStr) {
       case 'resolved':
+      case 'completed':
         return {
           icon: <CheckCircle2 className="w-6 h-6 text-green-500" />,
           color: 'text-green-600',
@@ -38,6 +75,9 @@ export default function CitizenStatus() {
           label: 'Resolved',
         }
       case 'in-progress':
+      case 'in progress':
+      case 'in_progress':
+      case 'inprogress':
         return {
           icon: <Clock className="w-6 h-6 text-blue-500" />,
           color: 'text-blue-600',
@@ -135,7 +175,7 @@ export default function CitizenStatus() {
             </div>
           </div>
           
-          {complaint.status === 'in-progress' && (
+          {(complaint.status === 1 || String(complaint.status || '').toLowerCase() === 'in-progress' || String(complaint.status || '').toLowerCase() === 'in progress') && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
                 <strong>Estimated Completion:</strong> {complaint.estimatedCompletion}

@@ -154,8 +154,7 @@ export const complaintsAPI = {
   },
   // Get complaints by email
   getByEmail: (email: string) => 
-    api.get('/complains', { 
-      params: { email },
+    api.get(`/complains/email/${encodeURIComponent(email)}`, { 
       headers: {
         'Content-Type': 'application/json',
       },

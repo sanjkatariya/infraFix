@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { complaintsAPI } from '@/lib/api';
 import AIChatbotComplaint from '@/components/AIChatbotComplaint';
+import TestAIAssist from '@/components/TestAIAssist';
 
 export default function CitizenDashboard() {
   const { user } = useAuthStore();
-  const [activeTab, setActiveTab] = useState<'submit' | 'history' | 'chatbot'>('submit');
+  const [activeTab, setActiveTab] = useState<'submit' | 'history' | 'chatbot' | 'testai'>('submit');
+  
+  // AI Agent URL - Update this with your actual AI Agent URL
+  const AI_AGENT_URL = import.meta.env.VITE_AI_AGENT_URL || 'https://your-ai-agent-url.com/api/chat';
   const [complaintForm, setComplaintForm] = useState({
     description: '',
     location: '',
@@ -15,6 +19,7 @@ export default function CitizenDashboard() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [complaints, setComplaints] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<'all' | 0 | 1 | 2>('all');
 
   // Fetch complaints on component mount
   useEffect(() => {
@@ -127,7 +132,7 @@ export default function CitizenDashboard() {
       console.log('  Email:', user.email);
       console.log('  Description:', complaintForm.description);
       console.log('  Location:', complaintForm.location);
-      console.log('  File:', selectedFile.name, selectedFile.type, `${(selectedFile.size / 1024).toFixed(2)} KB`);
+      console.log('  File:', selectedFile.name, selectedFile.type, ((selectedFile.size / 1024).toFixed(2) + ' KB'));
       
       // Verify FormData entries
       console.log('  FormData verification:');
@@ -194,7 +199,7 @@ export default function CitizenDashboard() {
           const { latitude, longitude } = position.coords;
           setComplaintForm(prev => ({
             ...prev,
-            location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+            location: latitude.toFixed(6) + ', ' + longitude.toFixed(6)
           }));
           alert('Location captured successfully!');
         },
@@ -205,17 +210,107 @@ export default function CitizenDashboard() {
     }
   };
 
+  // Utility function to get status info (handles both numeric and string statuses)
+  const getStatusInfo = (status: number | string | undefined) => {
+    // Handle numeric status codes: 0 = pending, 1 = inprogress, 2 = resolved
+    if (typeof status === 'number') {
+    switch (status) {
+        case 0:
+          return {
+            label: 'Pending',
+            class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+            icon: '⏳',
+            color: 'yellow'
+          };
+        case 1:
+          return {
+            label: 'In Progress',
+            class: 'bg-blue-100 text-blue-800 border-blue-200',
+            icon: '🔄',
+            color: 'blue'
+          };
+        case 2:
+          return {
+            label: 'Resolved',
+            class: 'bg-green-100 text-green-800 border-green-200',
+            icon: '✓',
+            color: 'green'
+          };
+      default:
+          return {
+            label: 'Unknown',
+            class: 'bg-gray-100 text-gray-800 border-gray-200',
+            icon: '❓',
+            color: 'gray'
+          };
+      }
+    }
+    
+    // Handle string statuses (backward compatibility)
+    const statusStr = String(status || 'pending').toLowerCase();
+    if (statusStr === 'pending' || statusStr === 'pending') {
+      return {
+        label: 'Pending',
+        class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        icon: '⏳',
+        color: 'yellow'
+      };
+    }
+    if (statusStr === 'in-progress' || statusStr === 'in progress' || statusStr === 'in_progress' || statusStr === 'inprogress') {
+      return {
+        label: 'In Progress',
+        class: 'bg-blue-100 text-blue-800 border-blue-200',
+        icon: '🔄',
+        color: 'blue'
+      };
+    }
+    if (statusStr === 'resolved' || statusStr === 'completed' || statusStr === 'Completed') {
+      return {
+        label: 'Resolved',
+        class: 'bg-green-100 text-green-800 border-green-200',
+        icon: '✓',
+        color: 'green'
+      };
+    }
+    
+    return {
+      label: 'Pending',
+      class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      icon: '⏳',
+      color: 'yellow'
+    };
+  };
+
   // Calculate complaint statistics
   const complaintStats = {
     total: complaints.length,
-    pending: complaints.filter(c => c.status === 'pending' || c.status === 'Pending').length,
-    inProgress: complaints.filter(c => c.status === 'in-progress' || c.status === 'In Progress' || c.status === 'in_progress').length,
-    completed: complaints.filter(c => c.status === 'completed' || c.status === 'Completed').length,
+    pending: complaints.filter(c => {
+      const status = c.status;
+      if (typeof status === 'number') return status === 0;
+      return String(status || '').toLowerCase() === 'pending';
+    }).length,
+    inProgress: complaints.filter(c => {
+      const status = c.status;
+      if (typeof status === 'number') return status === 1;
+      const statusStr = String(status || '').toLowerCase();
+      return statusStr === 'in-progress' || statusStr === 'in progress' || statusStr === 'in_progress' || statusStr === 'inprogress';
+    }).length,
+    resolved: complaints.filter(c => {
+      const status = c.status;
+      if (typeof status === 'number') return status === 2;
+      const statusStr = String(status || '').toLowerCase();
+      return statusStr === 'resolved' || statusStr === 'completed';
+    }).length,
   };
 
   // Show chatbot view if selected
   if (activeTab === 'chatbot') {
     return <AIChatbotComplaint onBack={() => setActiveTab('submit')} />;
+  }
+
+  // Show Test AI Assist view if selected
+  if (activeTab === 'testai') {
+    return <TestAIAssist onBack={() => setActiveTab('submit')} aiAgentUrl={AI_AGENT_URL} />;
   }
   
   return (
@@ -227,67 +322,50 @@ export default function CitizenDashboard() {
           <div className="flex gap-2 bg-white rounded-lg border p-1">
             <button
               onClick={() => setActiveTab('submit')}
-              className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
+              className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
                 activeTab === 'submit'
                   ? 'bg-green-600 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              )}
             >
               <span>➕</span>
               Submit Complaint
             </button>
             <button
               onClick={() => setActiveTab('chatbot')}
-              className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
+              className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
                 activeTab === 'chatbot'
                   ? 'bg-green-600 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              )}
             >
               <span>🤖</span>
               AI Assistant
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
+              className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
                 activeTab === 'history'
                   ? 'bg-green-600 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
-              }`}
+              )}
             >
               <span>📋</span>
               My Complaints
             </button>
+            <button
+              onClick={() => setActiveTab('testai')}
+              className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
+                activeTab === 'testai'
+                  ? 'bg-green-600 text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              )}
+            >
+              <span>🧪</span>
+              Test AI Assist
+            </button>
           </div>
         </div>
-
-        {/* Complaint Stats Banner */}
-        {user?.email && (
-          <div className="mb-6 bg-white rounded-lg border p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold">Your Complaints</h3>
-              <span className="text-sm text-gray-500">{user.email}</span>
-            </div>
-            <div className="grid grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{complaintStats.total}</div>
-                <div className="text-xs text-gray-600">Total</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{complaintStats.pending}</div>
-                <div className="text-xs text-gray-600">Pending</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{complaintStats.inProgress}</div>
-                <div className="text-xs text-gray-600">In Progress</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{complaintStats.completed}</div>
-                <div className="text-xs text-gray-600">Completed</div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Submit Complaint Tab */}
         {activeTab === 'submit' && (
@@ -368,11 +446,11 @@ export default function CitizenDashboard() {
                           >
                             Choose Photo
                           </button>
-                        </div>
-                      )}
-                    </div>
             </div>
-
+                      )}
+            </div>
+      </div>
+      
                   {/* Location */}
                   <div>
                     <label className="block text-sm mb-2">Location *</label>
@@ -420,68 +498,245 @@ export default function CitizenDashboard() {
                 </form>
               </>
             )}
-      </div>
+          </div>
         )}
 
         {/* My Complaints Tab */}
         {activeTab === 'history' && (
-          <div className="space-y-4">
+          <div>
+            {/* Complaint Stats Banner */}
+            {user?.email && (
+              <div className="mb-6 bg-white rounded-lg border p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold">Your Complaints</h3>
+                  <span className="text-sm text-gray-500">{user.email}</span>
+                </div>
+                <div className="grid grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">{complaintStats.total}</div>
+                    <div className="text-xs text-gray-600 font-medium">Total</div>
+                  </div>
+                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                    <div className="text-3xl font-bold text-yellow-600 mb-1">{complaintStats.pending}</div>
+                    <div className="text-xs text-gray-600 font-medium">Pending</div>
+                  </div>
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <div className="text-3xl font-bold text-blue-600 mb-1">{complaintStats.inProgress}</div>
+                    <div className="text-xs text-gray-600 font-medium">In Progress</div>
+                  </div>
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <div className="text-3xl font-bold text-green-600 mb-1">{complaintStats.resolved}</div>
+                    <div className="text-xs text-gray-600 font-medium">Resolved</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {/* Filter Tabs */}
+            {complaints.length > 0 && (
+              <div className="mb-4 bg-white rounded-lg border p-2 flex gap-2 overflow-x-auto">
+                <button
+                  onClick={() => setFilterStatus('all')}
+                  className={'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ' + (
+                    filterStatus === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  )}
+                >
+                  All ({complaintStats.total})
+                </button>
+                <button
+                  onClick={() => setFilterStatus(0)}
+                  className={'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ' + (
+                    filterStatus === 0
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  )}
+                >
+                  Pending ({complaintStats.pending})
+                </button>
+                <button
+                  onClick={() => setFilterStatus(1)}
+                  className={'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ' + (
+                    filterStatus === 1
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  )}
+                >
+                  In Progress ({complaintStats.inProgress})
+                </button>
+                <button
+                  onClick={() => setFilterStatus(2)}
+                  className={'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ' + (
+                    filterStatus === 2
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  )}
+                >
+                  Resolved ({complaintStats.resolved})
+                </button>
+              </div>
+            )}
+
             {isLoading ? (
               <div className="bg-white rounded-lg border p-12 text-center">
                 <div className="text-4xl mb-4">⏳</div>
                 <h3 className="text-lg mb-2">Loading Complaints...</h3>
               </div>
-            ) : complaints.length > 0 ? (
-              complaints.map((complaint, index) => {
-                const status = complaint.status || 'Pending';
-                const statusClass = 
-                  status.toLowerCase() === 'completed' ? 'bg-green-100 text-green-800' :
-                  status.toLowerCase() === 'in progress' || status.toLowerCase() === 'in-progress' || status.toLowerCase() === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                  'bg-yellow-100 text-yellow-800';
-                
-                return (
-                  <div key={complaint.id || complaint._id || index} className="bg-white rounded-lg border p-6">
-                    <div className="flex items-start justify-between mb-4">
-                  <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg">{complaint.id || complaint._id || `Complaint #${index + 1}`}</h3>
-                          <span className={`px-2 py-1 rounded text-xs ${statusClass}`}>
-                            {status}
-                          </span>
+            ) : (() => {
+              const filteredComplaints = filterStatus === 'all' 
+                ? complaints 
+                : complaints.filter(c => {
+                    const status = c.status;
+                    if (typeof status === 'number') {
+                      return status === filterStatus;
+                    }
+                    const statusNum = getStatusInfo(status).value;
+                    return statusNum === filterStatus;
+                  });
+
+              return filteredComplaints.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredComplaints.map((complaint, index) => {
+                    const statusInfo = getStatusInfo(complaint.status);
+                    const complaintId = complaint.id || complaint._id || ('COMP-' + String(index + 1).padStart(4, '0'));
+                    const complaintDate = complaint.createdAt || complaint.created_at || complaint.createdDate;
+                    const imageUrl = complaint.imageUrl || complaint.image || complaint.photo || complaint.file;
+                    const progressValue = complaint.progress || 50;
+                    
+                    return (
+                      <div key={complaintId} className="bg-white rounded-xl border border-gray-200 shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col h-full">
+                        {/* Image Section */}
+                        <div className="relative h-40 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                          {imageUrl ? (
+                            <img 
+                              src={imageUrl} 
+                              alt="Complaint photo" 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <div className="text-5xl opacity-20">📷</div>
+                            </div>
+                          )}
+                          {/* Status Badge Overlay */}
+                          <div className="absolute top-2 right-2">
+                            <span className={'px-2.5 py-1 rounded-full text-xs font-bold border border-white shadow-md flex items-center gap-1.5 ' + statusInfo.class}>
+                              <span className="text-sm">{statusInfo.icon}</span>
+                              <span>{statusInfo.label}</span>
+                            </span>
+                          </div>
+                          {/* ID Badge */}
+                          <div className="absolute top-2 left-2">
+                            <span className="px-2 py-1 bg-black bg-opacity-50 text-white text-xs font-semibold rounded backdrop-blur-sm">
+                              #{complaintId}
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-gray-600">{complaint.description?.substring(0, 50)}...</p>
-                      </div>
-                      {status.toLowerCase() === 'completed' && (
-                        <button className="px-4 py-2 border rounded-lg hover:bg-gray-50 text-sm">
-                          ⭐ Feedback
-                        </button>
-                      )}
-                    </div>
 
-                    <p className="text-sm text-gray-600 mb-4">📍 {complaint.location || 'Location not specified'}</p>
+                        {/* Content Section */}
+                        <div className="p-4 flex-1 flex flex-col">
+                          {/* Title */}
+                          <h3 className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug mb-3 min-h-[2.5rem]">
+                            {complaint.description || complaint.title || 'Infrastructure Issue'}
+                          </h3>
 
-                    {complaint.createdAt && (
-                      <div className="text-xs text-gray-500">
-                        Submitted: {new Date(complaint.createdAt).toLocaleDateString()}
+                          {/* Quick Info */}
+                          <div className="space-y-1.5 mb-3 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs">📍</span>
+                              <p className="text-xs text-gray-600 truncate flex-1">{complaint.location || 'Location not specified'}</p>
+                            </div>
+
+                            {complaintDate && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs">📅</span>
+                                <p className="text-xs text-gray-600">
+                                  {new Date(complaintDate).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </p>
+                              </div>
+                            )}
+
+                            {complaint.priority && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs">⚡</span>
+                                <p className={'text-xs font-semibold ' + (
+                                  complaint.priority.toLowerCase() === 'high' ? 'text-red-600' :
+                                  complaint.priority.toLowerCase() === 'medium' ? 'text-yellow-600' :
+                                  'text-green-600'
+                                )}>
+                                  {complaint.priority} Priority
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Progress Bar for In Progress */}
+                          {statusInfo.color === 'blue' && (
+                            <div className="mb-3 pt-3 border-t border-gray-100">
+                              <div className="flex items-center justify-between text-xs mb-1.5">
+                                <span className="text-gray-600">Progress</span>
+                                <span className="font-semibold text-blue-600">{progressValue}{'%'}</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-blue-600 transition-all duration-300 rounded-full" 
+                                  style={{ width: progressValue + '%' }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Work Order Info */}
+                          {(complaint.workorderId || complaint.assignedCrew) && (
+                            <div className="pt-3 border-t border-gray-100">
+                              <div className="flex flex-wrap gap-1.5 text-xs">
+                                {complaint.workorderId && (
+                                  <span className="px-2 py-0.5 bg-gray-100 rounded text-gray-700 font-medium">
+                                    WO: {complaint.workorderId}
+                                  </span>
+                                )}
+                                {complaint.assignedCrew && (
+                                  <span className="px-2 py-0.5 bg-blue-50 rounded text-blue-700 font-medium">
+                                    👷 {complaint.assignedCrew}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Feedback Button for Resolved */}
+                          {statusInfo.color === 'green' && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <button className="w-full px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1">
+                                <span>⭐</span>
+                                <span>Provide Feedback</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    {complaint.created_at && (
-                      <div className="text-xs text-gray-500">
-                        Submitted: {new Date(complaint.created_at).toLocaleDateString()}
-                      </div>
-                    )}
+                    );
+                  })}
+                </div>
+              ) : (
+                  <div className="bg-white rounded-lg border p-12 text-center col-span-full">
+                    <div className="text-4xl mb-4">🔍</div>
+                    <h3 className="text-lg mb-2">No Complaints Found</h3>
+                    <p className="text-gray-600">
+                      {filterStatus === 'all' 
+                        ? 'Submit your first complaint to start tracking infrastructure issues'
+                        : 'No complaints match the selected filter'}
+                    </p>
                   </div>
                 );
-              })
-            ) : (
-              <div className="bg-white rounded-lg border p-12 text-center">
-                <div className="text-4xl mb-4">📋</div>
-                <h3 className="text-lg mb-2">No Complaints Yet</h3>
-                <p className="text-gray-600">
-                  Submit your first complaint to start tracking infrastructure issues
-                </p>
-              </div>
-            )}
+              })()}
           </div>
         )}
       </div>
