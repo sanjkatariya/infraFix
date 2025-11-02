@@ -4,7 +4,7 @@ import axios from 'axios'
 const USE_PROXY = import.meta.env.DEV && import.meta.env.VITE_USE_PROXY === 'true'
 export const API_BASE_URL = USE_PROXY 
   ? '/api-proxy'  // Use Vite proxy to avoid CORS
-  : (import.meta.env.VITE_API_BASE_URL || 'http://9.61.3.174:8080')
+  : (import.meta.env.VITE_API_BASE_URL || 'https://application-27.225wzs8oba88.us-east.codeengine.appdomain.cloud')
 
 // Log configuration on startup
 if (import.meta.env.DEV) {

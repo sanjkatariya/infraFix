@@ -170,7 +170,7 @@ export default function CitizenDashboard() {
           : (errorData?.message || JSON.stringify(errorData || 'Internal server error'));
         
         if (typeof errorStr === 'string' && (errorStr.includes('ETIMEDOUT') || errorStr.includes('Proxy Error'))) {
-          errorMessage = 'Cannot connect to API server (9.61.3.174:8080). The server might be:\n- Not running\n- Not accessible from your network\n- Blocked by firewall\n\nContact backend team or check server status.';
+          errorMessage = 'Cannot connect to API server. The server might be:\n- Not running\n- Not accessible from your network\n- Blocked by firewall\n\nContact backend team or check server status.';
         } else {
           errorMessage = `Server error (500): ${errorStr}`;
         }

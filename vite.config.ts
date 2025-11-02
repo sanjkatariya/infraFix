@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api-proxy': {
-        target: 'http://9.61.3.174:8080',
+        target: 'https://application-27.225wzs8oba88.us-east.codeengine.appdomain.cloud',
         changeOrigin: true,
         secure: false, // Allow self-signed certificates if needed
         rewrite: (path) => path.replace(/^\/api-proxy/, ''),
@@ -16,7 +16,7 @@ export default defineConfig({
           proxy.on('error', (err: any, req: any, res: any) => {
             console.error('❌ Proxy Error:', err.code, err.message);
             console.error('  Request:', req.method, req.url);
-            console.error('  Target:', 'http://9.61.3.174:8080');
+            console.error('  Target:', 'https://application-27.225wzs8oba88.us-east.codeengine.appdomain.cloud');
             console.error('  Possible causes:');
             console.error('    - Server is down or not running');
             console.error('    - Network firewall blocking connection');
@@ -35,7 +35,7 @@ export default defineConfig({
             }
           });
           proxy.on('proxyReq', (proxyReq: any, req: any, _res: any) => {
-            console.log('📤 [Proxy]', req.method, req.url, '→', `http://9.61.3.174:8080${proxyReq.path}`);
+            console.log('📤 [Proxy]', req.method, req.url, '→', `https://application-27.225wzs8oba88.us-east.codeengine.appdomain.cloud${proxyReq.path}`);
           });
           proxy.on('proxyRes', (proxyRes: any, req: any, _res: any) => {
             console.log('📥 [Proxy]', proxyRes.statusCode, req.method, req.url);
