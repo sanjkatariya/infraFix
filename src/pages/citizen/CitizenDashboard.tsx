@@ -9,7 +9,7 @@ export default function CitizenDashboard() {
   const [activeTab, setActiveTab] = useState<'submit' | 'history' | 'chatbot' | 'testai'>('submit');
   
   // AI Agent URL - Update this with your actual AI Agent URL
-  const AI_AGENT_URL = import.meta.env.VITE_AI_AGENT_URL || 'https://your-ai-agent-url.com/api/chat';
+  const AI_AGENT_URL = import.meta.env.VITE_AI_AGENT_URL || 'https://inftaagent.225wzs8oba88.us-east.codeengine.appdomain.cloud/api/chat';
   const [complaintForm, setComplaintForm] = useState({
     description: '',
     location: '',
