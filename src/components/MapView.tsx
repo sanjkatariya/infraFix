@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { MapPin, AlertCircle, Wrench, Users } from 'lucide-react';
+import { AlertCircle, Wrench, Users } from 'lucide-react';
 
 const mapLocations = [
   { id: 1, type: 'complaint', priority: 'High', location: 'Main St & 5th Ave', top: '35%', left: '25%' },

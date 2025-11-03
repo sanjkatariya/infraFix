@@ -24,7 +24,7 @@ export default function InstallPrompt() {
     // Check if iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-    const isIOSStandalone = window.navigator.standalone === true;
+    const isIOSStandalone = (window.navigator as any).standalone === true;
     
     if (isIOSDevice) {
       setIsIOS(true);

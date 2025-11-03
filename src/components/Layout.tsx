@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, FileText, BarChart3, PlusCircle, CheckCircle, LogOut, Menu } from 'lucide-react'
+import { LayoutDashboard, FileText, BarChart3, LogOut, Menu } from 'lucide-react'
 import { useState } from 'react'
 
 export default function Layout() {

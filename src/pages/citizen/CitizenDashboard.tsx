@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { complaintsAPI } from '@/lib/api';
 import AIChatbotComplaint from '@/components/AIChatbotComplaint';
 import TestAIAssist from '@/components/TestAIAssist';
+import { getStatusInfo } from '@/lib/utils';
 
 export default function CitizenDashboard() {
   const { user } = useAuthStore();
@@ -210,76 +211,7 @@ export default function CitizenDashboard() {
     }
   };
 
-  // Utility function to get status info (handles both numeric and string statuses)
-  const getStatusInfo = (status: number | string | undefined) => {
-    // Handle numeric status codes: 0 = pending, 1 = inprogress, 2 = resolved
-    if (typeof status === 'number') {
-    switch (status) {
-        case 0:
-          return {
-            label: 'Pending',
-            class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            icon: '⏳',
-            color: 'yellow'
-          };
-        case 1:
-          return {
-            label: 'In Progress',
-            class: 'bg-blue-100 text-blue-800 border-blue-200',
-            icon: '🔄',
-            color: 'blue'
-          };
-        case 2:
-          return {
-            label: 'Resolved',
-            class: 'bg-green-100 text-green-800 border-green-200',
-            icon: '✓',
-            color: 'green'
-          };
-      default:
-          return {
-            label: 'Unknown',
-            class: 'bg-gray-100 text-gray-800 border-gray-200',
-            icon: '❓',
-            color: 'gray'
-          };
-      }
-    }
-    
-    // Handle string statuses (backward compatibility)
-    const statusStr = String(status || 'pending').toLowerCase();
-    if (statusStr === 'pending' || statusStr === 'pending') {
-      return {
-        label: 'Pending',
-        class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-        icon: '⏳',
-        color: 'yellow'
-      };
-    }
-    if (statusStr === 'in-progress' || statusStr === 'in progress' || statusStr === 'in_progress' || statusStr === 'inprogress') {
-      return {
-        label: 'In Progress',
-        class: 'bg-blue-100 text-blue-800 border-blue-200',
-        icon: '🔄',
-        color: 'blue'
-      };
-    }
-    if (statusStr === 'resolved' || statusStr === 'completed' || statusStr === 'Completed') {
-      return {
-        label: 'Resolved',
-        class: 'bg-green-100 text-green-800 border-green-200',
-        icon: '✓',
-        color: 'green'
-      };
-    }
-    
-    return {
-      label: 'Pending',
-      class: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      icon: '⏳',
-      color: 'yellow'
-    };
-  };
+  // Note: Using getStatusInfo from utils which handles both numeric and string statuses
 
   // Calculate complaint statistics
   const complaintStats = {
@@ -303,14 +235,23 @@ export default function CitizenDashboard() {
     }).length,
   };
 
+  // Helper function to handle tab switching with proper types
+  const handleTabClick = (tab: 'submit' | 'history' | 'chatbot' | 'testai') => {
+    setActiveTab(tab);
+  };
+
+  // Check which view to show (before early returns to avoid type narrowing)
+  const showChatbot = activeTab === 'chatbot';
+  const showTestAI = activeTab === 'testai';
+  
   // Show chatbot view if selected
-  if (activeTab === 'chatbot') {
-    return <AIChatbotComplaint onBack={() => setActiveTab('submit')} />;
+  if (showChatbot) {
+    return <AIChatbotComplaint onBack={() => handleTabClick('submit')} />;
   }
 
   // Show Test AI Assist view if selected
-  if (activeTab === 'testai') {
-    return <TestAIAssist onBack={() => setActiveTab('submit')} aiAgentUrl={AI_AGENT_URL} />;
+  if (showTestAI) {
+    return <TestAIAssist onBack={() => handleTabClick('submit')} aiAgentUrl={AI_AGENT_URL} />;
   }
   
   return (
@@ -321,7 +262,7 @@ export default function CitizenDashboard() {
         <div className="mb-6">
           <div className="flex gap-2 bg-white rounded-lg border p-1">
             <button
-              onClick={() => setActiveTab('submit')}
+              onClick={() => handleTabClick('submit')}
               className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
                 activeTab === 'submit'
                   ? 'bg-green-600 text-white'
@@ -332,9 +273,9 @@ export default function CitizenDashboard() {
               Submit Complaint
             </button>
             <button
-              onClick={() => setActiveTab('chatbot')}
+              onClick={() => handleTabClick('chatbot')}
               className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
-                activeTab === 'chatbot'
+                (activeTab as string) === 'chatbot'
                   ? 'bg-green-600 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
               )}
@@ -343,7 +284,7 @@ export default function CitizenDashboard() {
               AI Assistant
             </button>
             <button
-              onClick={() => setActiveTab('history')}
+              onClick={() => handleTabClick('history')}
               className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
                 activeTab === 'history'
                   ? 'bg-green-600 text-white'
@@ -354,9 +295,9 @@ export default function CitizenDashboard() {
               My Complaints
             </button>
             <button
-              onClick={() => setActiveTab('testai')}
+              onClick={() => handleTabClick('testai')}
               className={'flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ' + (
-                activeTab === 'testai'
+                (activeTab as string) === 'testai'
                   ? 'bg-green-600 text-white'
                   : 'text-gray-700 hover:bg-gray-100'
               )}

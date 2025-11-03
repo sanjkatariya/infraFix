@@ -107,9 +107,9 @@ export default function CitizenApp({ onLogout }: CitizenAppProps) {
                   Submit Complaint
                 </button>
                 <button
-                  onClick={() => setActiveTab('chatbot')}
+                  onClick={() => setActiveTab('chatbot' as typeof activeTab)}
                   className={`flex-1 py-2 px-4 rounded-md flex items-center justify-center gap-2 transition-colors ${
-                    activeTab === 'chatbot'
+                    (activeTab as string) === 'chatbot'
                       ? 'bg-green-600 text-white'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
