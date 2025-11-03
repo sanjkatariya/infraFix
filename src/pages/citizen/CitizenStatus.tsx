@@ -175,7 +175,7 @@ export default function CitizenStatus() {
             </div>
           </div>
           
-          {(complaint.status === 1 || String(complaint.status || '').toLowerCase() === 'in-progress' || String(complaint.status || '').toLowerCase() === 'in progress') && (
+          {((typeof complaint.status === 'number' && complaint.status === 1) || (typeof complaint.status === 'string' && (complaint.status.toLowerCase() === 'in-progress' || complaint.status.toLowerCase() === 'in progress'))) && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <p className="text-sm text-blue-800">
                 <strong>Estimated Completion:</strong> {complaint.estimatedCompletion}

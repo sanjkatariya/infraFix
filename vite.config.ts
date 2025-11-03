@@ -40,19 +40,25 @@ export default defineConfig({
           proxy.on('proxyRes', (proxyRes: any, req: any, _res: any) => {
             console.log('📥 [Proxy]', proxyRes.statusCode, req.method, req.url);
           });
-          proxy.on('timeout', (req: any, res: any) => {
-            console.error('⏱️  Proxy Timeout:', req.url);
-            if (res && !res.headersSent) {
-              res.writeHead(504, {
-                'Content-Type': 'application/json'
-              });
-              res.end(JSON.stringify({ 
-                error: 'Gateway Timeout', 
-                message: 'Server took too long to respond',
-                hint: 'API server might be slow or unreachable'
-              }));
-            }
-          });
+          // Note: 'timeout' event may not be available in all http-proxy versions
+          // Using try-catch to handle gracefully
+          try {
+            (proxy as any).on('timeout', (req: any, res: any) => {
+              console.error('⏱️  Proxy Timeout:', req.url);
+              if (res && !res.headersSent) {
+                res.writeHead(504, {
+                  'Content-Type': 'application/json'
+                });
+                res.end(JSON.stringify({ 
+                  error: 'Gateway Timeout', 
+                  message: 'Server took too long to respond',
+                  hint: 'API server might be slow or unreachable'
+                }));
+              }
+            });
+          } catch (e) {
+            // Timeout event not available, continue without it
+          }
         },
         timeout: 60000, // 60 seconds
       },

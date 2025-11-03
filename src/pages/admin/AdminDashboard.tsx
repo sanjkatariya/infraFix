@@ -1,4 +1,3 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 const statsData = [
   { title: 'Total Complaints', value: '1,247', change: '+12%', icon: '⚠️', color: 'text-blue-600', bgColor: 'bg-blue-50' },
