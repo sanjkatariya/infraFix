@@ -249,7 +249,7 @@ export default function CitizenDashboard() {
     return <AIChatbotComplaint onBack={() => handleTabClick('submit')} />;
   }
 
-  // Show Test AI Assist view if selected
+  // Show InfraFix AI Assist view if selected
   if (showTestAI) {
     return <TestAIAssist onBack={() => handleTabClick('submit')} aiAgentUrl={AI_AGENT_URL} />;
   }
@@ -302,8 +302,8 @@ export default function CitizenDashboard() {
                   : 'text-gray-700 hover:bg-gray-100'
               )}
             >
-              <span>🧪</span>
-              Test AI Assist
+              <span>🤖</span>
+              InfraFix AI Assist
             </button>
           </div>
         </div>
