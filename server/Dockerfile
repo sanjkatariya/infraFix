@@ -4,11 +4,13 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Copy package files (including package-lock.json)
+COPY package.json ./
+COPY package-lock.json* ./
 
 # Install dependencies
-RUN npm ci --only=production
+# Use npm ci if package-lock.json exists, otherwise use npm install
+RUN if [ -f package-lock.json ]; then npm ci --only=production --legacy-peer-deps; else npm install --only=production --legacy-peer-deps; fi
 
 # Copy source code
 COPY . .
